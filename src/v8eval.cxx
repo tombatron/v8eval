@@ -8,7 +8,7 @@
 
 namespace v8eval {
 
-static v8::Platform* platform = nullptr;
+static std::unique_ptr<v8::Platform> platform = nullptr;
 
 void set_flags(const std::string& flags) {
   v8::V8::SetFlagsFromString(flags.c_str(), static_cast<int>(flags.length()));
@@ -19,8 +19,8 @@ bool initialize() {
     return false;
   }
 
-  platform = v8::platform::CreateDefaultPlatform();
-  v8::V8::InitializePlatform(platform);
+  platform = v8::platform::NewDefaultPlatform();
+  v8::V8::InitializePlatform(platform.get());
 
   return v8::V8::Initialize();
 }
@@ -33,7 +33,7 @@ bool dispose() {
   v8::V8::Dispose();
 
   v8::V8::ShutdownPlatform();
-  delete platform;
+  platform.reset();
   platform = nullptr;
 
   return true;
