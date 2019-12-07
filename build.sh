@@ -33,7 +33,7 @@ install_v8() {
   cd ${V8EVAL_ROOT}
   fetch v8
   cd v8
-  git checkout 7.1.177
+  git checkout 7.9.317.31
   gclient sync
   if [ ${PLATFORM} = "Linux" ]; then
     ./build/install-build-deps.sh
