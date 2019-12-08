@@ -81,7 +81,7 @@ std::string _V8::to_std_string(v8::Local<v8::Value> value) {
 
 v8::Local<v8::Value> _V8::json_parse(v8::Local<v8::Context> context, v8::Local<v8::String> str) {
   v8::Local<v8::Object> global = context->Global();
-  v8::Local<v8::Object> json = global->Get(context, new_string("JSON")).ToLocalChecked()->ToObject(isolate_);
+  v8::Local<v8::Object> json = global->Get(context, new_string("JSON")).ToLocalChecked()->ToObject(context).ToLocalChecked();
   v8::Local<v8::Function> parse = v8::Local<v8::Function>::Cast(json->Get(context, new_string("parse")).ToLocalChecked());
 
   v8::Local<v8::Value> result;
@@ -95,14 +95,14 @@ v8::Local<v8::Value> _V8::json_parse(v8::Local<v8::Context> context, v8::Local<v
 
 v8::Local<v8::String> _V8::json_stringify(v8::Local<v8::Context> context, v8::Local<v8::Value> value) {
   v8::Local<v8::Object> global = context->Global();
-  v8::Local<v8::Object> json = global->Get(context, new_string("JSON")).ToLocalChecked()->ToObject(isolate_);
+  v8::Local<v8::Object> json = global->Get(context, new_string("JSON")).ToLocalChecked()->ToObject(context).ToLocalChecked();
   v8::Local<v8::Function> stringify = v8::Local<v8::Function>::Cast(json->Get(context, new_string("stringify")).ToLocalChecked());
 
   v8::Local<v8::Value> result;
   if (!stringify->Call(context, json, 1, &value).ToLocal(&result)) {
     return new_string("");
   } else {
-    return result->ToString(isolate_);
+    return result->ToString(context).ToLocalChecked();
   }
 }
 
@@ -176,20 +176,21 @@ std::string _V8::call(const std::string& func, const std::string& args) {
 
 void Heap(const v8::FunctionCallbackInfo<v8::Value>& args) {
   v8::Isolate* isolate = args.GetIsolate();
-
+  v8::Local<v8::Context> context = isolate->GetCurrentContext();
   v8::HeapStatistics s;
   isolate->GetHeapStatistics(&s);
 
   v8::Local<v8::Object> obj = v8::Object::New(isolate);
-  obj->Set(v8::String::NewFromUtf8(isolate, "totalHeapSize"), v8::Number::New(isolate, s.total_heap_size()));
-  obj->Set(v8::String::NewFromUtf8(isolate, "totalHeapSizeExecutable"), v8::Number::New(isolate, s.total_heap_size_executable()));
-  obj->Set(v8::String::NewFromUtf8(isolate, "totalPhysicalSize"), v8::Number::New(isolate, s.total_physical_size()));
-  obj->Set(v8::String::NewFromUtf8(isolate, "totalAvailableSize"), v8::Number::New(isolate, s.total_available_size()));
-  obj->Set(v8::String::NewFromUtf8(isolate, "usedHeapSize"), v8::Number::New(isolate, s.used_heap_size()));
-  obj->Set(v8::String::NewFromUtf8(isolate, "heapSizeLimit"), v8::Number::New(isolate, s.heap_size_limit()));
-  obj->Set(v8::String::NewFromUtf8(isolate, "mallocedMemory"), v8::Number::New(isolate, s.malloced_memory()));
-  obj->Set(v8::String::NewFromUtf8(isolate, "peakMallocedMemory"), v8::Number::New(isolate, s.peak_malloced_memory()));
-  obj->Set(v8::String::NewFromUtf8(isolate, "doesZapGarbage"), v8::Number::New(isolate, s.does_zap_garbage()));
+
+  (void)obj->Set(context, v8::String::NewFromUtf8(isolate, "totalHeapSize").ToLocalChecked(), v8::Number::New(isolate, s.total_heap_size()));
+  (void)obj->Set(context, v8::String::NewFromUtf8(isolate, "totalHeapSizeExecutable").ToLocalChecked(), v8::Number::New(isolate, s.total_heap_size_executable()));
+  (void)obj->Set(context, v8::String::NewFromUtf8(isolate, "totalPhysicalSize").ToLocalChecked(), v8::Number::New(isolate, s.total_physical_size()));
+  (void)obj->Set(context, v8::String::NewFromUtf8(isolate, "totalAvailableSize").ToLocalChecked(), v8::Number::New(isolate, s.total_available_size()));
+  (void)obj->Set(context, v8::String::NewFromUtf8(isolate, "usedHeapSize").ToLocalChecked(), v8::Number::New(isolate, s.used_heap_size()));
+  (void)obj->Set(context, v8::String::NewFromUtf8(isolate, "heapSizeLimit").ToLocalChecked(), v8::Number::New(isolate, s.heap_size_limit()));
+  (void)obj->Set(context, v8::String::NewFromUtf8(isolate, "mallocedMemory").ToLocalChecked(), v8::Number::New(isolate, s.malloced_memory()));
+  (void)obj->Set(context, v8::String::NewFromUtf8(isolate, "peakMallocedMemory").ToLocalChecked(), v8::Number::New(isolate, s.peak_malloced_memory()));
+  (void)obj->Set(context, v8::String::NewFromUtf8(isolate, "doesZapGarbage").ToLocalChecked(), v8::Number::New(isolate, s.does_zap_garbage()));
 
   args.GetReturnValue().Set(obj);
 }
@@ -203,7 +204,7 @@ void _V8::enable_heap_report() {
   v8::Local<v8::Context> context = this->context();
   v8::Context::Scope context_scope(context);
 
-  context->Global()->Set(new_string("heap"), v8::FunctionTemplate::New(isolate_, Heap)->GetFunction());
+  (void)context->Global()->Set(context, new_string("help"), v8::FunctionTemplate::New(isolate_, Heap)->GetFunction(context).ToLocalChecked());
 }
 
 }  // namespace v8eval

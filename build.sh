@@ -57,7 +57,10 @@ archive_lib() {
 V8_OUT=${V8EVAL_ROOT}/v8/out.gn/x64.release/obj
 
 archive_v8() {
-  archive_lib ${V8_OUT} v8_base
+  archive_lib ${V8_OUT} v8_compiler
+  archive_lib ${V8_OUT} v8_compiler_opt
+  archive_lib ${V8_OUT} v8_libbase
+  archive_lib ${V8_OUT} v8_base_without_compiler
   archive_lib ${V8_OUT} v8_libsampler
   archive_lib ${V8_OUT} v8_init
   archive_lib ${V8_OUT} v8_initializers
